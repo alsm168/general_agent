@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import os
+from dotenv import load_dotenv, find_dotenv
 from dataclasses import dataclass, field
 
 from shared.configuration import BaseConfiguration
 from typing import Annotated, TypedDict, Literal
+
+_ = load_dotenv(find_dotenv())
 
 @dataclass(kw_only=True)
 class MapConfig:
@@ -21,7 +25,7 @@ class MapConfig:
     )
     
     url: str = field(
-        default='https://mcp.map.baidu.com/sse?ak=3aZKDTSvcLN50ocPNNA8f2ztg0eIX6Fy',
+        default=os.getenv('MAP_API_URL', 'https://mcp.map.baidu.com/sse?ak=****'), # set in .env
         metadata={
             "description": "用于MapAgent的URL."
         },

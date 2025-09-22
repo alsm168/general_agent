@@ -22,7 +22,7 @@ async def rag_react_stream_with_user_and_thread(message, history, user_id, sessi
 
     response = ""
     async for message_chunk, metadata in main_agent.astream({"messages": [{"role": "user", "content": message}],
-    "choose_web_search": web_search}, config):
+    "choose_web_search": web_search}, config, stream_mode="messages"):
         # 跳过工具输出
         if metadata["langgraph_node"] == "tools":
             continue
