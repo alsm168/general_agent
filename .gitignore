@@ -53,3 +53,6 @@ Thumbs.db
 certs/*.crt
 certs/*.key
 certs/*.pem
+
+# Generated files
+generate_mermaid.py
