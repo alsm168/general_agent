@@ -27,7 +27,7 @@ requires = ["setuptools>=73.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["superviser_graph", "index_graph", "retrieval_graph", "shared", "file_agent", "web_search_agent", "address_book_agent", "researcher_agent"]
+packages = ["superviser_graph", "index_graph", "retrieval_graph", "shared", "file_agent", "web_search_agent", "travel_agent", "address_book_agent", "researcher_agent"]
 [tool.setuptools.package-dir]
 "superviser_graph" = "src/superviser_graph"
 "index_graph" = "src/index_graph"
@@ -35,6 +35,7 @@ packages = ["superviser_graph", "index_graph", "retrieval_graph", "shared", "fil
 "shared" = "src/shared"
 "file_agent" = "src/file_agent"
 "web_search_agent" = "src/web_search_agent"
+"travel_agent" = "src/travel_agent"
 "address_book_agent" = "src/address_book_agent"
 "researcher_agent" = "src/researcher_agent"
 
