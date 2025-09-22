@@ -70,10 +70,9 @@ with gr.Blocks() as demo_block:
 
         # 点击按钮时，清空 chatbot 内容并重置会话状态
         def clear_chat_and_session():
-            session_state.value = {}
-            return None
+            return None, {}
         
-        clear_btn.click(clear_chat_and_session, outputs=chat.chatbot)
+        clear_btn.click(clear_chat_and_session, outputs=[chat.chatbot, session_state])
     # radio.change(prefill_chatbot, inputs=radio, outputs=chat)
 
 # 启动 Gradio，无参数 queue()
