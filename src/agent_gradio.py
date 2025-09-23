@@ -21,15 +21,56 @@ async def rag_react_stream_with_user_and_thread(message, history, user_id, sessi
     yield "请稍等，我正在处理您的问题..."
 
     response = ""
-    async for message_chunk, metadata in main_agent.astream({"messages": [{"role": "user", "content": message}],
-    "choose_web_search": web_search}, config, stream_mode="messages"):
+    interrupted = False
+    interrupt_content = ''
+    async for chunk in main_agent.astream({"messages": [{"role": "user", "content": message}],
+    "choose_web_search": web_search}, config, stream_mode=["messages", "updates"]):
         # 跳过工具输出
-        if metadata["langgraph_node"] == "tools":
-            continue
-
-        if message_chunk.content:
-            response += message_chunk.content
-            yield response
+        if chunk[0] == 'messages':
+            message, meta_data = chunk[1]
+            if meta_data.get('langgraph_node') == 'tools':
+                continue
+            if meta_data.get('langgraph_node') == 'analyze_and_route_query':\
+                continue
+            if message.content:
+                response += message.content
+                yield response
+        elif chunk[0] == 'updates':
+            # 检查是否包含中断相关的信息
+            chunk_sub = chunk[1]
+            if isinstance(chunk_sub, dict):
+                # 检查是否有任何节点被中断
+                for key, value in chunk_sub.items():
+                    if key == "__interrupt__":
+                        # print(f"检测到interrupt中断: {value}")
+                        interrupt_content = value[0].value['question']
+                        interrupted = True
+                        break
+                if interrupted:
+                    break
+    if interrupted:
+        # response += f'中断原因：{interrupt_content}'
+        print("检测到中断，需要人工审核")
+        # 模拟人工审核（在实际应用中，这里应该是一个用户界面）
+        approval = input(f"{interrupt_content}\n\n批准操作吗？(yes/no): ")
+        if approval.lower() == 'yes':
+            approval = 'approve'
+            try:
+                async for chunk in main_agent.astream(Command(resume={"user_response": approval}),
+                    stream_mode=['messages', 'updates'],
+                    config=config,
+                    ):
+                    if chunk[0] == 'messages':
+                        message, meta_data = chunk[1]
+                        if meta_data.get('langgraph_node') == 'tools':
+                            continue
+                        if meta_data.get('langgraph_node') == 'analyze_and_route_query':\
+                            continue
+                        if message.content:
+                            response += message.content
+                            yield response
+            except Exception as e:
+                print(f"修订执行过程中发生错误: {e}")
 
 # 自动填充示例聊天内容
 def prefill_chatbot(choice):

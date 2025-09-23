@@ -4,15 +4,14 @@
 
 # 项目结构
 - `src/`：项目的源代码目录
-  - `superviser_graph/`：主图Superviser相关代码
-  - `index_graph/`：用于基于字符串序列构建RAG索引相关代码
-  - `retrieval_graph/`：检索langchain知识的RAG检索相关代码
-  - `file_agent/`：用户给定输入文件（docx、pdf、text）问题图相关代码
-  - `address_book_agent/`：地址簿excel问题图相关代码
-  - `web_search_agent/`：网络搜索问题图相关代码
-  - `travel_agent/`：基于百度地图MCP的旅行规划agent
-  - `langchain_agent/`：Langchain实例的RAG问题图相关代码
-  - `researcher_agent/`：Langgraph实例的RAG问题深入研究相关代码
+  - `superviser_graph/`：主图Superviser相关代码，主体采用了Router模式
+  - `index_graph/`：用于基于字符串序列构建RAG索引相关代码，采用了chain模式
+  - `retrieval_agent/`：检索langchain知识的RAG检索相关代码，该子图采用了chain模式
+  - `file_agent/`：用户给定输入文件（docx、pdf、text）问题图相关代码，该子图采用了chain模式
+  - `address_book_agent/`：地址簿excel问题图相关代码，该子图采用了Evaluator-Optimizer模式
+  - `web_search_agent/`：网络搜索问题图相关代码，该子图采用了React+reflection模式
+  - `travel_agent/`：基于百度地图MCP的旅行规划agent，该子图采用了React+reflection模式
+  - `researcher_agent/`：Langgraph实例的RAG问题深入研究相关代码,采用了Orchestrator-Worker模式
   - `shared/`：共享代码，包括工具函数、模型加载等
   - `dev_function.py`：开发用的函数，用于测试和调试
 - `certs/`：用于连接elastic的证书信息

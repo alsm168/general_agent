@@ -183,6 +183,11 @@ async def dev_retrieval_agent_with_main():
         
 import uuid
 async def dev_retrieval_agent_with_main_for_audit():
+    """
+    用来测试 retrieval_agent
+    注意：只有updatesm模式下才会检测中断！！！！！！！！！！！！！！！！！！！！！！！！！！
+    所以只有采用【messages、updates】组合模式下才能处理好interrupt问题
+    """
     from langgraph.types import Command
     """用来测试retrieval_agent"""
     config = {
@@ -216,12 +221,6 @@ async def dev_retrieval_agent_with_main_for_audit():
                         print(f"检测到中断: {value}")
                         interrupted = True
                         break
-                    # 检查节点输出中是否包含需要审批的内容
-                    elif isinstance(value, dict) and 'proposed_action_details' in value:
-                        if "请审批检索词" in value['proposed_action_details']:
-                            print("检测到需要人工审核的检索词")
-                            interrupted = True
-                            break
                 
                 if interrupted:
                     break
@@ -260,6 +259,88 @@ async def dev_retrieval_agent_with_main_for_audit():
                 print(f"修订执行过程中发生错误: {e}")
 
 
+async def dev_retrieval_agent_with_main_for_auditv2():
+    from langgraph.types import Command
+    from langgraph.errors import NodeInterrupt  # 注意 import 正确的异常类
+    """用来测试retrieval_agent"""
+    config = {
+        "configurable": {
+            'thread_id': uuid.uuid4(),
+            'user_name': 'lsm',
+            'index_name': 'langchain_book_index',
+        }
+    }
+    
+    # 使用流式处理来检测中断
+    print("开始执行检索代理...")
+    interrupted = False
+    interrupt_content = ''
+    
+    try:
+        async for chunk in main_agent.astream({"messages": [{
+            "role": "user",
+            # "content": "我是研发工程师，请问langchain有哪些特点"}]},
+            "content": "帮我规划明天从海淀到环球影城的旅游计划"}]},
+            stream_mode=['updates', 'messages'],
+            config=config,
+            ):
+            if chunk[0] == 'messages':
+                message, meta_data = chunk[1]
+                if meta_data.get('langgraph_node') == 'tools':
+                    continue
+                if meta_data.get('langgraph_node') == 'analyze_and_route_query':\
+                    continue
+                if message.content:
+                    print(message.content, end='', flush=True)
+            elif chunk[0] == 'updates':
+                # 检查是否包含中断相关的信息
+                chunk_sub = chunk[1]
+                if isinstance(chunk_sub, dict):
+                    # 检查是否有任何节点被中断
+                    for key, value in chunk_sub.items():
+                        if key == "__interrupt__":
+                            # print(f"检测到interrupt中断: {value}")
+                            interrupt_content = value[0].value['question']
+                            interrupted = True
+                            break
+                    
+                    if interrupted:
+                        break
+        print('\n')
+    except Exception as e:
+        print(f"执行过程中发生错误: {e}")
+        interrupted = True
+    print(f"interrupted={interrupted}|interrupt_content={interrupt_content}--------------------------------------------------")
+    
+    if interrupted:
+        print("检测到中断，需要人工审核")
+        
+        # 模拟人工审核（在实际应用中，这里应该是一个用户界面）
+        approval = input("批准操作吗？(yes/no): ")
+        
+        if approval.lower() == 'yes':
+            approval = 'approve'
+            try:
+                async for chunk in main_agent.astream(Command(resume={"user_response": approval}),
+                    stream_mode='updates',
+                    config=config,
+                    ):
+                    print("当前修订:")
+                    print(chunk)
+            except Exception as e:
+                print(f"修订执行过程中发生错误: {e}")
+        else:
+            approval = 'reject'
+            user_type = input("请选择分类(file_question, address_book, more-info, langchain, general, web_search, langgraph): ")
+            try:
+                async for chunk in main_agent.astream(Command(resume={"user_response": approval, "type": user_type}),
+                    stream_mode='updates',
+                    config=config,
+                    ):
+                    print("当前修订:")
+                    print(chunk)
+            except Exception as e:
+                print(f"修订执行过程中发生错误: {e}")
 
 
 async def dev_researcher_agent():
@@ -315,7 +396,7 @@ if __name__ == "__main__":
         asyncio.run(dev_elastic_retriever())
     if do_it == 6:
         # asyncio.run(dev_retrieval_agent())
-        asyncio.run(dev_retrieval_agent_with_main_for_audit())
+        asyncio.run(dev_retrieval_agent_with_main_for_auditv2())
     if do_it == 7:
         asyncio.run(dev_researcher_agent())
     if do_it == 8:
