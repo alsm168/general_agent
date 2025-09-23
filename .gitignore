@@ -55,6 +55,9 @@ certs/*.key
 certs/*.pem
 
 # Generated files
+.gradio/
+src/.gradio/
+generate_mermaid.py
 
 # Development functions
 src/dev_function.py
