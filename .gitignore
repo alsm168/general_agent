@@ -55,4 +55,6 @@ certs/*.key
 certs/*.pem
 
 # Generated files
-generate_mermaid.py
+
+# Development functions
+src/dev_function.py
